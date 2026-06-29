@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
 import os
 import time
 from sqlalchemy.orm import Session
@@ -17,14 +18,26 @@ from app.models import user, issue, verification, comment, gamification, resolut
 from app.routes import users, issues, verifications, comments, resolver
 from app.routes import ai as ai_routes
 
-# Create all tables using the single shared Base
-logger.info("Synchronizing database tables...")
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: initialize DB tables after uvicorn has bound to the port
+    logger.info("Synchronizing database tables...")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables synchronized.")
+    except Exception as e:
+        logger.error(f"Failed to synchronize database tables: {e}")
+        raise
+    yield
+    # Shutdown (nothing needed for now)
+
 
 app = FastAPI(
     title="Community Hero API",
     description="Hyperlocal Problem Solver Platform",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # Middleware for request logging
@@ -111,7 +124,5 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         logger.error(f"Error fetching dashboard stats: {str(e)}")
         raise
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+
 
