@@ -38,6 +38,10 @@ jobs:
 
       - name: Create or Update Cloud Run Job
         run: |
+          # --args is comma-separated: each comma becomes a separate argument to the command.
+          # This means: python setup_admin.py <user_identifier>
+          ARGS="setup_admin.py,${{ github.event.inputs.user_identifier }}"
+
           # Check if job exists
           if gcloud run jobs describe ${{ env.JOB_NAME }} \
             --region ${{ env.REGION }} &>/dev/null; then
@@ -46,8 +50,9 @@ jobs:
               --image ${{ env.IMAGE_NAME }}:latest \
               --region ${{ env.REGION }} \
               --command python \
-              --args "setup_admin.py,${{ github.event.inputs.user_identifier }}" \
-              --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
+              --args "$ARGS" \
+              --set-secrets "DATABASE_URL=DATABASE_URL:latest" \
+              --set-env-vars "LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
               --task-timeout 300 \
@@ -58,8 +63,9 @@ jobs:
               --image ${{ env.IMAGE_NAME }}:latest \
               --region ${{ env.REGION }} \
               --command python \
-              --args "setup_admin.py,${{ github.event.inputs.user_identifier }}" \
-              --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
+              --args "$ARGS" \
+              --set-secrets "DATABASE_URL=DATABASE_URL:latest" \
+              --set-env-vars "LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
               --task-timeout 300 \
@@ -72,45 +78,24 @@ jobs:
           echo "🚀 Executing job to promote user to ADMIN..."
           echo "User Identifier: ${{ github.event.inputs.user_identifier }}"
           echo ""
-          
+          echo "⏳ Waiting for job to complete (max 5 minutes)..."
+
+          # --wait blocks until the job finishes and exits non-zero on failure.
           EXECUTION_NAME=$(gcloud run jobs execute ${{ env.JOB_NAME }} \
             --region ${{ env.REGION }} \
+            --wait \
             --format='value(metadata.name)' 2>&1)
-          
-          if [ -z "$EXECUTION_NAME" ]; then
-            echo "❌ Failed to execute job"
+
+          EXIT_CODE=$?
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Job execution failed (exit code: $EXIT_CODE)"
+            echo "Output: $EXECUTION_NAME"
             exit 1
           fi
-          
+
           echo "execution_name=$EXECUTION_NAME" >> $GITHUB_OUTPUT
-          echo "✓ Job execution started: $EXECUTION_NAME"
-          echo ""
-          echo "⏳ Waiting for job to complete (max 5 minutes)..."
-          
-          # Wait for job to complete (max 5 minutes = 30 attempts × 10 seconds)
-          COMPLETED=false
-          for i in {1..30}; do
-            sleep 10
-            STATUS=$(gcloud run jobs executions describe "$EXECUTION_NAME" \
-              --job=${{ env.JOB_NAME }} \
-              --region ${{ env.REGION }} \
-              --format='value(status.conditions[-1].state)' 2>&1)
-            
-            if [[ "$STATUS" == "SUCCEEDED" ]]; then
-              echo "✅ Job SUCCEEDED"
-              COMPLETED=true
-              break
-            elif [[ "$STATUS" == "FAILED" ]]; then
-              echo "❌ Job FAILED"
-              COMPLETED=true
-              break
-            fi
-            echo "Waiting... Status: $STATUS (attempt $i/30)"
-          done
-          
-          if [ "$COMPLETED" = false ]; then
-            echo "⚠️  Job did not complete within 5 minutes, but continuing to fetch logs..."
-          fi
+          echo "✅ Job execution completed: $EXECUTION_NAME"
 
       - name: Get Job Logs
         if: always()
@@ -129,21 +114,31 @@ jobs:
           echo "Execution: $EXECUTION_NAME"
           echo ""
           
-          # Fetch logs with better error handling
+          # Wait briefly for logs to be ingested before querying
+          sleep 5
+
+          # gcloud logging read is a global command — --region is NOT supported here
           LOG_OUTPUT=$(gcloud logging read \
             "resource.type=cloud_run_job AND resource.labels.job_name=${{ env.JOB_NAME }} AND resource.labels.execution_name=$EXECUTION_NAME" \
-            --region ${{ env.REGION }} \
             --limit 100 \
+            --order asc \
             --format 'value(textPayload)' \
             --project ${{ env.PROJECT_ID }} 2>&1)
           
           if [ -z "$LOG_OUTPUT" ]; then
-            echo "⚠️  No logs found. Trying alternative method..."
-            # Alternative: Get logs directly from execution
+            echo "⚠️  No text logs found. Trying jsonPayload..."
+            gcloud logging read \
+              "resource.type=cloud_run_job AND resource.labels.job_name=${{ env.JOB_NAME }} AND resource.labels.execution_name=$EXECUTION_NAME" \
+              --limit 50 \
+              --order asc \
+              --format 'value(jsonPayload.message)' \
+              --project ${{ env.PROJECT_ID }} 2>&1 || true
+            echo ""
+            echo "Execution status:"
             gcloud run jobs executions describe "$EXECUTION_NAME" \
               --job=${{ env.JOB_NAME }} \
               --region ${{ env.REGION }} \
-              --format='value(status.conditions)' 2>&1
+              --format='table(metadata.name,status.conditions)' 2>&1 || true
           else
             echo "$LOG_OUTPUT"
           fi
@@ -170,9 +165,10 @@ jobs:
           echo ""
           echo "📝 Troubleshooting:"
           echo "  1. Check that the user identifier exists: '${{ github.event.inputs.user_identifier }}'"
-          echo "  2. View logs in Cloud Console:"
+          echo "  2. Verify the DATABASE_URL secret exists in Secret Manager and is accessible by the job's service account"
+          echo "  3. View logs in Cloud Console:"
           echo "     https://console.cloud.google.com/run/jobs/details/${{ env.REGION }}/${{ env.JOB_NAME }}/executions"
-          echo "  3. Verify database connection and setup_admin.py script"
+          echo "  4. Verify setup_admin.py is included in the Docker image"
           echo ""
 
       - name: Job Summary
