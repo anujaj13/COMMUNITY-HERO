@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy frontend files
+COPY frontend/ .
+
+# Add a script to replace API URL
+RUN echo '#!/bin/sh\n\
+if [ -n "$API_BASE_URL" ]; then\n\
+  find . -name "*.js" -o -name "*.html" -exec sed -i "s|http://localhost:8000|$API_BASE_URL|g" {} +\n\
+fi\n\
+exec python -m http.server 3000' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# Expose port
+EXPOSE 3000
+
+# Run entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]

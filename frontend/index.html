@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Hero - Hyperlocal Problem Solver</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div id="pageLoader" class="page-loader">
+        <div class="loader-content">
+            <div class="loader-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="loader-text">Community Hero</div>
+            <div class="loader-bar"><div class="loader-progress"></div></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>Community Hero</span>
+                </div>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#home" class="nav-link">Home</a></li>
+                    <li><a href="#report" class="nav-link">Report</a></li>
+                    <li><a href="#issues" class="nav-link">Issues</a></li>
+                    <li><a href="#map" class="nav-link">Map</a></li>
+                    <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+                    <li><a href="#insights" class="nav-link">Insights</a></li>
+                    <li><a href="#leaderboard" class="nav-link">Leaderboard</a></li>
+                </ul>
+                <div class="nav-actions" id="navActions">
+                    <button class="btn-login" onclick="openLoginModal()"><i class="fas fa-sign-in-alt"></i> Login</button>
+                    <button class="btn-signup" onclick="openSignupModal()"><i class="fas fa-user-plus"></i> Sign Up</button>
+                </div>
+                <button class="hamburger" id="hamburger" onclick="toggleMobileNav()">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-bg">
+            <div class="hero-shape s1"></div>
+            <div class="hero-shape s2"></div>
+            <div class="hero-shape s3"></div>
+            <div class="hero-shape s4"></div>
+        </div>
+        <div class="container">
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <div class="hero-badge"><i class="fas fa-bolt"></i> AI-Powered Community Platform</div>
+                    <h1 class="hero-title">
+                        Make Your<br>
+                        <span class="gradient-text">Community Better</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        Report issues, get them verified by neighbors, track progress in real-time, and celebrate resolutions together.
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary btn-lg" onclick="scrollToSection('report')">
+                            <i class="fas fa-plus-circle"></i> Report an Issue
+                        </button>
+                        <button class="btn btn-ghost btn-lg" onclick="scrollToSection('issues')">
+                            <i class="fas fa-list"></i> Browse Issues
+                        </button>
+                    </div>
+                    <div class="hero-trust">
+                        <div class="trust-item"><i class="fas fa-check-circle"></i> Community Verified</div>
+                        <div class="trust-item"><i class="fas fa-check-circle"></i> Real-time Tracking</div>
+                        <div class="trust-item"><i class="fas fa-check-circle"></i> Gamified Engagement</div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="hero-card-stack">
+                        <div class="hero-card c1">
+                            <div class="hc-icon critical"><i class="fas fa-road"></i></div>
+                            <div class="hc-info">
+                                <strong>Pothole Reported</strong>
+                                <span>Main Street &amp; 5th Ave</span>
+                            </div>
+                            <div class="hc-badge critical">Critical</div>
+                        </div>
+                        <div class="hero-card c2">
+                            <div class="hc-icon high"><i class="fas fa-droplet"></i></div>
+                            <div class="hc-info">
+                                <strong>Water Leak</strong>
+                                <span>Park Avenue</span>
+                            </div>
+                            <div class="hc-badge high">High</div>
+                        </div>
+                        <div class="hero-card c3">
+                            <div class="hc-icon success"><i class="fas fa-check"></i></div>
+                            <div class="hc-info">
+                                <strong>Streetlight Fixed!</strong>
+                                <span>Oak Boulevard</span>
+                            </div>
+                            <div class="hc-badge resolved">Resolved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap"><i class="fas fa-users"></i></div>
+                    <h3 class="stat-num" id="stat-users">0</h3>
+                    <p>Active Citizens</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap"><i class="fas fa-map-marker-alt"></i></div>
+                    <h3 class="stat-num" id="stat-issues">0</h3>
+                    <p>Issues Reported</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap"><i class="fas fa-check-double"></i></div>
+                    <h3 class="stat-num" id="stat-verifications">0</h3>
+                    <p>Verifications</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrap"><i class="fas fa-circle-check"></i></div>
+                    <h3 class="stat-num" id="stat-resolved">0</h3>
+                    <p>Resolved &nbsp;<span id="stat-rate" class="rate-badge">0%</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Report Issue Section -->
+    <section id="report" class="report-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><i class="fas fa-plus"></i> New Report</span>
+                <h2>Report a Community Issue</h2>
+                <p>Your report helps make the community better. Be specific to get faster resolution.</p>
+            </div>
+            <div class="report-layout">
+                <form id="reportForm" class="report-form" onsubmit="handleReportSubmit(event)">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label><i class="fas fa-camera"></i> Photo / Video <span class="required">*</span></label>
+                            <div class="file-upload" id="fileDropzone">
+                                <input type="file" id="fileInput" name="file" accept="image/*,video/*" onchange="handleFileSelect(this)" required>
+                                <div class="file-upload-content" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-magic" style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary)"></i>
+                                    <span id="fileUploadText" style="font-weight: 600; font-size: 1.1rem">Upload Issue Media</span>
+                                    <p style="margin-top: 0.5rem; color: var(--text-muted)">AI will automatically detect the category, title, and description</p>
+                                    <small>JPG, PNG, MP4 up to 10MB</small>
+                                </div>
+                            </div>
+                            
+                            <!-- AI Analysis Result Panel -->
+                            <div id="aiPanel" class="ai-panel" style="display: none;">
+                                <div class="ai-panel-header">
+                                    <span class="ai-badge"><i class="fas fa-robot"></i> AI Analysis Result</span>
+                                    <span class="ai-status">Confidence: High</span>
+                                </div>
+                                <div class="ai-content" id="aiPanelContent">
+                                    <div class="ai-skeleton"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group full">
+                            <label for="issueContext"><i class="fas fa-comment-dots"></i> Short Context (Optional)</label>
+                            <textarea id="issueContext" name="context" placeholder="Add any extra details or context you want the AI to know..." rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="issuePriority"><i class="fas fa-exclamation-triangle"></i> Priority</label>
+                            <div class="select-wrapper">
+                                <select id="issuePriority" name="priority">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="issueAddress"><i class="fas fa-map-pin"></i> Location <span class="required">*</span></label>
+                            <div class="input-group">
+                                <input type="text" id="issueAddress" name="address" placeholder="Detected location..." required>
+                                <button type="button" class="input-btn" onclick="getCurrentLocation()" title="Use my location">
+                                    <i class="fas fa-location-crosshairs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="issueLat" name="latitude" value="40.7128">
+                    <input type="hidden" id="issueLng" name="longitude" value="-74.0060">
+
+                    <!-- AI Processing Status (hidden by default) -->
+                    <div id="aiProcessingStatus" class="ai-processing-status" style="display:none; margin-top: 1.5rem; text-align: center; background: rgba(99,102,241,0.05); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--primary)">
+                         <div class="spinner"><i class="fas fa-robot fa-spin" style="font-size: 2rem; color: var(--primary)"></i></div>
+                         <h4 style="margin-top: 1rem">AI is analyzing your report...</h4>
+                         <p style="font-size: 0.9rem; color: var(--text-muted)">Identifying problem, generating description and setting category.</p>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> Submit with AI Analysis
+                        </button>
+                    </div>
+                </form>
+                <div class="report-sidebar">
+                    <div class="sidebar-card tips">
+                        <h4><i class="fas fa-lightbulb"></i> Tips for a Good Report</h4>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Be specific with the location</li>
+                            <li><i class="fas fa-check-circle"></i> Add a photo if possible</li>
+                            <li><i class="fas fa-check-circle"></i> Describe the impact on community</li>
+                            <li><i class="fas fa-check-circle"></i> Set the right priority level</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Issues Feed Section -->
+    <section id="issues" class="issues-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><i class="fas fa-list"></i> Feed</span>
+                <h2>Community Issues</h2>
+                <p>Track all reported issues in your community</p>
+            </div>
+            <div class="issues-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="issueSearch" placeholder="Search issues..." oninput="filterIssues()">
+                </div>
+                <div class="filter-chips">
+                    <button class="filter-chip active" data-filter="all" onclick="setFilter(this,'all')">All</button>
+                    <button class="filter-chip" data-filter="reported" onclick="setFilter(this,'reported')">Reported</button>
+                    <button class="filter-chip" data-filter="verified" onclick="setFilter(this,'verified')">Verified</button>
+                    <button class="filter-chip" data-filter="in_progress" onclick="setFilter(this,'in_progress')">In Progress</button>
+                    <button class="filter-chip" data-filter="resolved" onclick="setFilter(this,'resolved')">Resolved</button>
+                </div>
+            </div>
+            <div id="issuesList" class="issues-grid"></div>
+            <div class="load-more-wrap">
+                <button class="btn btn-secondary" id="loadMoreBtn" onclick="loadMoreIssues()" style="display:none">
+                    <i class="fas fa-chevron-down"></i> Load More
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map" class="map-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><i class="fas fa-map"></i> Map</span>
+                <h2>Issues Map</h2>
+                <p>Visual overview of community issues</p>
+            </div>
+        </div>
+        <div class="map-wrapper">
+            <div id="issueMap" class="map-canvas"></div>
+            <div class="map-controls">
+                <div class="map-legend">
+                    <h4><i class="fas fa-circle-info"></i> Legend</h4>
+                    <div class="legend-item"><span class="dot critical"></span> Critical</div>
+                    <div class="legend-item"><span class="dot high"></span> High</div>
+                    <div class="legend-item"><span class="dot medium"></span> Medium</div>
+                    <div class="legend-item"><span class="dot low"></span> Low</div>
+                    <div class="legend-item"><span class="dot resolved"></span> Resolved</div>
+                </div>
+                <div id="mapIssueCount" class="map-count-badge">0 issues</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="dashboard-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><i class="fas fa-chart-bar"></i> Analytics</span>
+                <h2>Impact Dashboard</h2>
+                <p>Real-time analytics of your community</p>
+            </div>
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <div class="dash-card-header"><h3><i class="fas fa-chart-pie"></i> Issues by Category</h3></div>
+                    <div id="categoryChart" class="bar-chart-container"></div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-card-header"><h3><i class="fas fa-fire"></i> Trending This Week</h3></div>
+                    <ul id="trendingList" class="trend-list"></ul>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-card-header"><h3><i class="fas fa-clock"></i> Recently Reported</h3></div>
+                    <ul id="recentList" class="recent-list-v2"></ul>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-card-header"><h3><i class="fas fa-chart-line"></i> Status Overview</h3></div>
+                    <div id="statusChart" class="status-chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Predictive Insights Section -->
+    <section id="insights" class="insights-section">
+        <div class="container">
+            <div class="section-header" style="color:#fff">
+                <span class="section-tag insights-tag"><i class="fas fa-brain"></i> AI Predictions</span>
+                <h2 style="color:#fff">Predictive Insights</h2>
+                <p style="color:rgba(255,255,255,.65)">AI-powered forecasts to help prioritize community action</p>
+            </div>
+
+            <!-- Loading skeleton -->
+            <div id="insightsLoading" class="insights-loading">
+                <div class="insight-skeleton"></div>
+                <div class="insight-skeleton"></div>
+                <div class="insight-skeleton"></div>
+            </div>
+
+            <!-- Insights grid (hidden until loaded) -->
+            <div id="insightsGrid" class="insights-grid" style="display:none">
+                <!-- At-Risk Issues card -->
+                <div class="insight-card">
+                    <div class="insight-card-header">
+                        <span class="insight-card-icon risk"><i class="fas fa-fire-flame-curved"></i></span>
+                        <h3>At-Risk Issues</h3>
+                        <span class="insight-card-sub">Likely to escalate</span>
+                    </div>
+                    <ul id="atRiskList" class="at-risk-list"></ul>
+                </div>
+
+                <!-- Category Trends card -->
+                <div class="insight-card">
+                    <div class="insight-card-header">
+                        <span class="insight-card-icon trend"><i class="fas fa-chart-line"></i></span>
+                        <h3>Category Trends</h3>
+                        <span class="insight-card-sub">This week vs last week</span>
+                    </div>
+                    <div id="categoryTrendList" class="category-trend-list"></div>
+                </div>
+
+                <!-- Hotspot Alerts card -->
+                <div class="insight-card">
+                    <div class="insight-card-header">
+                        <span class="insight-card-icon hotspot"><i class="fas fa-location-dot"></i></span>
+                        <h3>Hotspot Alerts</h3>
+                        <span class="insight-card-sub">Issue clusters by area</span>
+                    </div>
+                    <div id="hotspotList" class="hotspot-list"></div>
+                </div>
+            </div>
+
+            <!-- AI Narrative Callout -->
+            <div id="insightNarrative" class="insight-narrative" style="display:none"></div>
+
+            <!-- Sparse data / error state -->
+            <div id="insightsSparseState" class="insights-sparse" style="display:none">
+                <i class="fas fa-seedling"></i>
+                <p id="insightsSparseMsg">Keep reporting issues to unlock AI-powered insights!</p>
+            </div>
+
+            <div class="insights-footer">
+                <span id="insightsTimestamp" class="insights-ts"></span>
+                <button class="btn btn-ghost btn-sm" id="refreshInsightsBtn" onclick="refreshInsights()">
+                    <i class="fas fa-rotate-right"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section id="leaderboard" class="leaderboard-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag"><i class="fas fa-trophy"></i> Heroes</span>
+                <h2>Community Leaderboard</h2>
+                <p>Celebrating citizens who make a difference</p>
+            </div>
+            <div class="leaderboard-layout">
+                <div class="leaderboard-top3" id="top3Heroes"></div>
+                <div class="leaderboard-table-wrap">
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Hero</th>
+                                <th>Reputation</th>
+                                <th>Badges</th>
+                                <th>Reports</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Issue Detail Modal -->
+    <div id="issueDetailModal" class="modal modal-wide" onclick="closeModalOnOverlay(event,'issueDetailModal')">
+        <div class="modal-content modal-content-wide">
+            <button class="modal-close" onclick="closeIssueDetail()"><i class="fas fa-times"></i></button>
+            <div id="issueDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- Edit Issue Modal -->
+    <div id="editIssueModal" class="modal modal-wide" onclick="closeModalOnOverlay(event,'editIssueModal')">
+        <div class="modal-content modal-content-wide">
+            <button class="modal-close" onclick="closeEditIssueModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-edit"></i></div>
+            <h2>Edit Your Report</h2>
+            <p class="modal-sub">Update the issue details and categorization</p>
+            <form id="editIssueForm" onsubmit="handleEditIssueSubmit(event)">
+                <input type="hidden" id="editIssueId" name="issueId">
+                <div class="form-group full">
+                    <label for="editIssueTitle"><i class="fas fa-heading"></i> Issue Title <span class="required">*</span></label>
+                    <input type="text" id="editIssueTitle" name="title" placeholder="Brief title of the issue" required>
+                </div>
+                <div class="form-group full">
+                    <label for="editIssueDescription"><i class="fas fa-align-left"></i> Description <span class="required">*</span></label>
+                    <textarea id="editIssueDescription" name="description" placeholder="Detailed description of the issue" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editIssueCategory"><i class="fas fa-tag"></i> Category <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                        <select id="editIssueCategory" name="category" required>
+                            <option value="pothole">🕳️ Pothole</option>
+                            <option value="water_leak">💧 Water Leak</option>
+                            <option value="streetlight">💡 Streetlight</option>
+                            <option value="waste_management">🗑️ Waste Management</option>
+                            <option value="road_damage">🛣️ Road Damage</option>
+                            <option value="flooding">🌊 Flooding</option>
+                            <option value="public_facility">🏛️ Public Facility</option>
+                            <option value="safety">🔒 Safety</option>
+                            <option value="other">❓ Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editIssuePriority"><i class="fas fa-exclamation-triangle"></i> Priority <span class="required">*</span></label>
+                    <div class="select-wrapper">
+                        <select id="editIssuePriority" name="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary btn-full" id="editIssueSubmitBtn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-full" onclick="closeEditIssueModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" onclick="closeModalOnOverlay(event,'loginModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeLoginModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-user-circle"></i></div>
+            <h2>Welcome Back</h2>
+            <p class="modal-sub">Sign in to your Community Hero account</p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginUsername"><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="loginUsername" name="username" placeholder="Your username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword"><i class="fas fa-lock"></i> Password</label>
+                    <div class="input-group">
+                        <input type="password" id="loginPassword" name="password" placeholder="Your password" required autocomplete="current-password">
+                        <button type="button" class="input-btn" onclick="togglePassword('loginPassword')"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+            <p class="modal-footer-text">Don't have an account? <a href="#" onclick="switchToSignup()">Sign Up</a></p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal" onclick="closeModalOnOverlay(event,'signupModal')">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeSignupModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-icon"><i class="fas fa-shield-halved"></i></div>
+            <h2>Join Community Hero</h2>
+            <p class="modal-sub">Create your account and start making a difference</p>
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="signupName"><i class="fas fa-id-card"></i> Full Name</label>
+                    <input type="text" id="signupName" name="full_name" placeholder="Your full name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="signupUsername"><i class="fas fa-at"></i> Username</label>
+                        <input type="text" id="signupUsername" name="username" placeholder="username" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="signupEmail" name="email" placeholder="email@example.com" required autocomplete="email">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword"><i class="fas fa-lock"></i> Password</label>
+                    <div class="input-group">
+                        <input type="password" id="signupPassword" name="password" placeholder="Create a password" required autocomplete="new-password">
+                        <button type="button" class="input-btn" onclick="togglePassword('signupPassword')"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="signupBtn">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            <p class="modal-footer-text">Already have an account? <a href="#" onclick="switchToLogin()">Sign In</a></p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo"><i class="fas fa-shield-halved"></i> Community Hero</div>
+                    <p>Making communities better, one report at a time.</p>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="#report">Report Issue</a></li>
+                        <li><a href="#issues">Browse Issues</a></li>
+                        <li><a href="#map">Issues Map</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#leaderboard">Leaderboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Developer</h4>
+                    <ul>
+                        <li><a href="http://localhost:8000/docs" target="_blank">API Docs</a></li>
+                        <li><a href="http://localhost:8000/redoc" target="_blank">ReDoc</a></li>
+                        <li><a href="http://localhost:8000/health" target="_blank">Health Check</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Community Hero &mdash; Built with FastAPI &amp; Vanilla JS</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/app.js"></script>
+</body>
+</html>

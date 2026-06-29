@@ -1,0 +1,145 @@
+﻿name: Deploy Community-Hero to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  REGION: asia-south1
+  REGISTRY_REGION: asia-south1
+  SERVICE_NAME: community-hero
+  IMAGE_NAME: asia-south1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/community-hero/community-hero
+
+jobs:
+  build-and-deploy-backend:
+    name: Build and Deploy Backend (FastAPI) to Cloud Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      service_url: ${{ steps.get-url.outputs.SERVICE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGISTRY_REGION }}-docker.pkg.dev
+          
+      - name: Create Artifact Registry repository if needed
+        run: |
+          gcloud artifacts repositories create community-hero \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --quiet || true
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -f Dockerfile.api .
+          docker tag ${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.IMAGE_NAME }}:latest
+
+      - name: Push Docker image
+        run: |
+          gcloud auth configure-docker ${{ env.REGISTRY_REGION }}-docker.pkg.dev --quiet
+          docker push ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }}-backend \
+            --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300 \
+            --max-instances 5 \
+            --min-instances 0 \
+            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO"
+
+      - name: Get Backend service URL
+        id: get-url
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }}-backend \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "Backend deployed to: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
+
+  build-and-deploy-frontend:
+    name: Build and Deploy Frontend to Cloud Run
+    runs-on: ubuntu-latest
+    needs: build-and-deploy-backend
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGISTRY_REGION }}-docker.pkg.dev
+
+      - name: Build Docker image for Frontend
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} -f Dockerfile.frontend .
+          docker tag ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} ${{ env.IMAGE_NAME }}-frontend:latest
+
+      - name: Push Docker image to Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGISTRY_REGION }}-docker.pkg.dev --quiet
+          docker push ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }}
+          docker push ${{ env.IMAGE_NAME }}-frontend:latest
+
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }}-frontend \
+            --image ${{ env.IMAGE_NAME }}-frontend:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --memory 512Mi \
+            --cpu 1 \
+            --timeout 300 \
+            --max-instances 5 \
+            --min-instances 0 \
+            --set-env-vars "API_BASE_URL=${{ needs.build-and-deploy-backend.outputs.service_url }}"
+
+  finalize:
+    name: Finalize Deployment
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy-backend, build-and-deploy-frontend]
+    if: always()
+    steps:
+      - name: Report Status
+        run: |
+          echo "Community Hero Deployment Finished"
+          echo "Backend: ${{ needs.build-and-deploy-backend.outputs.service_url }}"
