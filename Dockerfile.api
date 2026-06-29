@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code from backend folder
 COPY backend/app ./app
 COPY backend/uploads ./uploads
+COPY backend/setup_admin.py ./setup_admin.py
 
 # Expose port (Cloud Run uses PORT env var, defaults to 8080)
 EXPOSE 8080
