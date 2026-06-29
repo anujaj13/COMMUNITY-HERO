@@ -158,7 +158,7 @@ jobs:
             --timeout 300 \
             --max-instances 10 \
             --min-instances 1 \
-            --startup-cpu-boost \
+            --cpu-boost \
             --set-env-vars "API_BASE_URL=${{ needs.build-and-deploy-backend.outputs.service_url }}"
 
   finalize:
