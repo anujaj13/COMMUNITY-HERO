@@ -77,12 +77,18 @@ jobs:
             --region ${{ env.REGION }} \
             --format='value(metadata.name)' 2>&1)
           
+          if [ -z "$EXECUTION_NAME" ]; then
+            echo "❌ Failed to execute job"
+            exit 1
+          fi
+          
           echo "execution_name=$EXECUTION_NAME" >> $GITHUB_OUTPUT
           echo "✓ Job execution started: $EXECUTION_NAME"
           echo ""
-          echo "⏳ Waiting for job to complete..."
+          echo "⏳ Waiting for job to complete (max 5 minutes)..."
           
-          # Wait for job to complete (max 5 minutes)
+          # Wait for job to complete (max 5 minutes = 30 attempts × 10 seconds)
+          COMPLETED=false
           for i in {1..30}; do
             sleep 10
             STATUS=$(gcloud run jobs executions describe "$EXECUTION_NAME" \
@@ -90,33 +96,62 @@ jobs:
               --region ${{ env.REGION }} \
               --format='value(status.conditions[-1].state)' 2>&1)
             
-            if [[ "$STATUS" == "SUCCEEDED" ]] || [[ "$STATUS" == "FAILED" ]]; then
-              echo "Job finished with status: $STATUS"
+            if [[ "$STATUS" == "SUCCEEDED" ]]; then
+              echo "✅ Job SUCCEEDED"
+              COMPLETED=true
+              break
+            elif [[ "$STATUS" == "FAILED" ]]; then
+              echo "❌ Job FAILED"
+              COMPLETED=true
               break
             fi
-            echo "Still waiting... (attempt $i/30)"
+            echo "Waiting... Status: $STATUS (attempt $i/30)"
           done
+          
+          if [ "$COMPLETED" = false ]; then
+            echo "⚠️  Job did not complete within 5 minutes, but continuing to fetch logs..."
+          fi
 
       - name: Get Job Logs
         if: always()
         run: |
-          echo "📋 Job Logs:"
+          echo "📋 Fetching Job Logs..."
           echo "=========================================="
           
-          # Use the execution name from previous step
           EXECUTION_NAME="${{ steps.execute-job.outputs.execution_name }}"
           
-          # Get logs using Cloud Logging API
-          gcloud logging read \
+          if [ -z "$EXECUTION_NAME" ]; then
+            echo "❌ No execution name available"
+            exit 1
+          fi
+          
+          # Get execution details
+          echo "Execution: $EXECUTION_NAME"
+          echo ""
+          
+          # Fetch logs with better error handling
+          LOG_OUTPUT=$(gcloud logging read \
             "resource.type=cloud_run_job AND resource.labels.job_name=${{ env.JOB_NAME }} AND resource.labels.execution_name=$EXECUTION_NAME" \
             --region ${{ env.REGION }} \
-            --limit 50 \
+            --limit 100 \
             --format 'value(textPayload)' \
-            2>/dev/null || echo "No logs available yet. Check Cloud Logging console."
+            --project ${{ env.PROJECT_ID }} 2>&1)
+          
+          if [ -z "$LOG_OUTPUT" ]; then
+            echo "⚠️  No logs found. Trying alternative method..."
+            # Alternative: Get logs directly from execution
+            gcloud run jobs executions describe "$EXECUTION_NAME" \
+              --job=${{ env.JOB_NAME }} \
+              --region ${{ env.REGION }} \
+              --format='value(status.conditions)' 2>&1
+          else
+            echo "$LOG_OUTPUT"
+          fi
           
           echo "=========================================="
 
       - name: Success Summary
+        if: success()
         run: |
           echo ""
           echo "✅ User promotion job completed!"
@@ -127,20 +162,35 @@ jobs:
           echo "  3. Login with your promoted admin account"
           echo ""
 
+      - name: Failure Summary
+        if: failure()
+        run: |
+          echo ""
+          echo "❌ Job execution failed!"
+          echo ""
+          echo "📝 Troubleshooting:"
+          echo "  1. Check that the user identifier exists: '${{ github.event.inputs.user_identifier }}'"
+          echo "  2. View logs in Cloud Console:"
+          echo "     https://console.cloud.google.com/run/jobs/details/${{ env.REGION }}/${{ env.JOB_NAME }}/executions"
+          echo "  3. Verify database connection and setup_admin.py script"
+          echo ""
+
       - name: Job Summary
         if: always()
         run: |
+          EXECUTION_NAME="${{ steps.execute-job.outputs.execution_name }}"
+          
           echo "## 🎯 User Promotion Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| User Identifier | ${{ github.event.inputs.user_identifier }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| User Identifier | \`${{ github.event.inputs.user_identifier }}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Region | ${{ env.REGION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Job Name | ${{ env.JOB_NAME }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Execution | ${{ steps.execute-job.outputs.execution_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Execution ID | \`${EXECUTION_NAME}\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Script | setup_admin.py |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Useful Links" >> $GITHUB_STEP_SUMMARY
-          echo "- [Frontend](https://community-hero-frontend-y4wprv4gea-el.a.run.app/)" >> $GITHUB_STEP_SUMMARY
-          echo "- [Cloud Run Jobs](https://console.cloud.google.com/run/jobs?region=${{ env.REGION }})" >> $GITHUB_STEP_SUMMARY
-          echo "- [Cloud Logs](https://console.cloud.google.com/logs/query?resource=cloud_run_job)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Cloud Run Jobs Console](https://console.cloud.google.com/run/jobs?region=${{ env.REGION }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Job Execution Details](https://console.cloud.google.com/run/jobs/details/${{ env.REGION }}/${{ env.JOB_NAME }}/executions?region=${{ env.REGION }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [Cloud Logs](https://console.cloud.google.com/logs/query?resource=cloud_run_job&project=${{ env.PROJECT_ID }})" >> $GITHUB_STEP_SUMMARY
