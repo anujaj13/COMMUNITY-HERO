@@ -1,9 +1,9 @@
 /* ============================================================
    Community Hero – app.js
-   Full API integration with backend at http://localhost:8000
+   Full API integration with backend
    ============================================================ */
 
-const API = 'http://localhost:8000';
+const API = window.API_BASE_URL || 'http://localhost:8000';
 
 // ── Logging ────────────────────────────────────────────────
 const LOG = {
@@ -34,6 +34,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   initLoader();
   restoreSession();
   setupNavScroll();
+  updateDeveloperLinks();
   setupFileDrop();
   loadDashboard();
   loadIssues();
@@ -92,6 +93,17 @@ function setupNavScroll() {
 function toggleMobileNav() {
   LOG.debug('Toggling mobile nav');
   document.getElementById('navLinks').classList.toggle('open');
+}
+
+/* ── Developer Links ───────────────────────────────────────── */
+function updateDeveloperLinks() {
+  const links = document.querySelectorAll('#developerLinks a');
+  links.forEach(link => {
+    const endpoint = link.getAttribute('data-endpoint');
+    if (endpoint) {
+      link.href = `${API}${endpoint}`;
+    }
+  });
 }
 
 /* ── Session ──────────────────────────────────────────────── */

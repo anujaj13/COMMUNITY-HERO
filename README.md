@@ -106,6 +106,25 @@ COMMUNITY-HERO/
 
    Access the app at `http://localhost:3000`
 
+## Production Deployment
+
+For production grade deployment, the `API_BASE_URL` can be passed as an environment variable or replaced in the frontend files.
+
+### GitHub Workflow
+The included [.github/workflows/deploy.yaml](.github/workflows/deploy.yaml) automatically:
+1. Deploys the Backend to Google Cloud Run.
+2. Captures the Backend instance URL.
+3. Deploys the Frontend and injects the Backend URL as `API_BASE_URL`.
+
+### Manual Docker Deployment
+```bash
+# Backend
+docker run -e GEMINI_API_KEY=your_key -e DATABASE_URL=your_db_url -p 8000:8080 community-hero-api
+
+# Frontend
+docker run -e API_BASE_URL=https://your-api-url.com -p 3000:8080 community-hero-web
+```
+
 ## AI Image Analysis Setup
 
 The platform uses **Google Gemini AI** to automatically analyze images and categorize issues. This feature requires an API key.

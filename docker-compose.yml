@@ -1,30 +1,81 @@
 version: '3.8'
 
 services:
+  # Backend API Service (FastAPI with Uvicorn)
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
+    container_name: community-hero-api
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8080"
     environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - DATABASE_URL=sqlite:///./community_hero.db
-      - FLASK_ENV=development
-      - DEBUG=True
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PORT=8080
     volumes:
+      # Mount source code for development (hot reload)
       - ./backend/app:/app/backend/app
+      # Persist uploads
       - ./backend/uploads:/app/backend/uploads
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # Persist SQLite database
+      - ./backend:/app/backend
+    working_dir: /app/backend
+    healthcheck:
+      # Use Python to check health (curl may not be installed)
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health').read()"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - community-hero-network
+    expose:
+      - "8080"
 
+  # Frontend Web Server (Static File Server)
   frontend:
-    image: python:3.11-slim
-    working_dir: /app/frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: community-hero-web
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:8080"
+    environment:
+      # Browser accesses frontend and API through localhost port mappings
+      # Don't include /api here; app.js appends the path itself
+      - API_BASE_URL=${API_BASE_URL:-http://localhost:8000}
+      - PORT=8080
     volumes:
-      - ./frontend:/app/frontend
-    command: python -m http.server 3000
+      # Mount frontend code for development
+      - ./frontend:/app
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      # Use Python to check health
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/index.html').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - community-hero-network
+    expose:
+      - "8080"
 
+# Define the custom network for service communication
 networks:
-  default:
+  community-hero-network:
+    driver: bridge
     name: community-hero-network
+
+# Named volumes for persistent data (optional, for production use)
+volumes:
+  backend-data:
+    driver: local
+  uploads-data:
+    driver: local

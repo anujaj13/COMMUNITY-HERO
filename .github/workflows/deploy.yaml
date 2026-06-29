@@ -71,8 +71,9 @@ jobs:
             --memory 1Gi \
             --cpu 1 \
             --timeout 300 \
-            --max-instances 5 \
-            --min-instances 0 \
+            --max-instances 10 \
+            --min-instances 1 \
+            --startup-cpu-boost \
             --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO"
 
       - name: Get Backend service URL
@@ -84,6 +85,26 @@ jobs:
             --format 'value(status.url)')
           echo "Backend deployed to: $SERVICE_URL"
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
+
+      - name: Wait for Backend to be Healthy
+        run: |
+          echo "Waiting for backend to be healthy..."
+          SERVICE_URL=${{ steps.get-url.outputs.SERVICE_URL }}
+          MAX_ATTEMPTS=60
+          ATTEMPT=0
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            echo "Health check attempt $((ATTEMPT+1))/$MAX_ATTEMPTS..."
+            if curl -f -s "$SERVICE_URL/api" > /dev/null; then
+              echo "✓ Backend is healthy!"
+              exit 0
+            fi
+            ATTEMPT=$((ATTEMPT+1))
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              sleep 2
+            fi
+          done
+          echo "✗ Backend failed to become healthy after ${MAX_ATTEMPTS} attempts"
+          exit 1
 
   build-and-deploy-frontend:
     name: Build and Deploy Frontend to Cloud Run
@@ -129,8 +150,9 @@ jobs:
             --memory 512Mi \
             --cpu 1 \
             --timeout 300 \
-            --max-instances 5 \
-            --min-instances 0 \
+            --max-instances 10 \
+            --min-instances 1 \
+            --startup-cpu-boost \
             --set-env-vars "API_BASE_URL=${{ needs.build-and-deploy-backend.outputs.service_url }}"
 
   finalize:
@@ -141,5 +163,11 @@ jobs:
     steps:
       - name: Report Status
         run: |
-          echo "Community Hero Deployment Finished"
-          echo "Backend: ${{ needs.build-and-deploy-backend.outputs.service_url }}"
+          echo "✓ Community Hero Deployment Finished"
+          echo ""
+          echo "Services:"
+          echo "  Backend:  ${{ needs.build-and-deploy-backend.outputs.service_url }}"
+          echo "  Frontend: https://${{ env.SERVICE_NAME }}-frontend-xxxx.run.app"
+          echo ""
+          echo "⏱️  IMPORTANT: Services may take 30-60 seconds to fully initialize."
+          echo "If you see 'Could not connect to backend', wait a few minutes and refresh."

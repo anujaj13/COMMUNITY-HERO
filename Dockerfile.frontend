@@ -5,15 +5,14 @@ WORKDIR /app
 # Copy frontend files
 COPY frontend/ .
 
-# Add a script to replace API URL
-RUN echo '#!/bin/sh\n\
-if [ -n "$API_BASE_URL" ]; then\n\
-  find . -name "*.js" -o -name "*.html" -exec sed -i "s|http://localhost:8000|$API_BASE_URL|g" {} +\n\
-fi\n\
-exec python -m http.server ${PORT:-8080}' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
 
 # Expose port
 EXPOSE 8080
 
-# Run entrypoint script
+# Use startup script to inject environment variables into static files
 ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Serve static files on 0.0.0.0 to allow external connections
+CMD ["python", "-m", "http.server", "--bind", "0.0.0.0", "--directory", "/app", "8080"]

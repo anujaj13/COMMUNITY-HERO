@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        // Production Configuration variable - can be replaced during deployment
+        // e.g., sed -i 's|http://localhost:8000|${PRODUCTION_API_URL}|g' index.html
+        window.API_BASE_URL = 'http://localhost:8000';
+    </script>
 </head>
 <body>
 
@@ -566,10 +571,10 @@
                 </div>
                 <div class="footer-links">
                     <h4>Developer</h4>
-                    <ul>
-                        <li><a href="http://localhost:8000/docs" target="_blank">API Docs</a></li>
-                        <li><a href="http://localhost:8000/redoc" target="_blank">ReDoc</a></li>
-                        <li><a href="http://localhost:8000/health" target="_blank">Health Check</a></li>
+                    <ul id="developerLinks">
+                        <li><a href="#" target="_blank" data-endpoint="/docs">API Docs</a></li>
+                        <li><a href="#" target="_blank" data-endpoint="/redoc">ReDoc</a></li>
+                        <li><a href="#" target="_blank" data-endpoint="/health">Health Check</a></li>
                     </ul>
                 </div>
             </div>
