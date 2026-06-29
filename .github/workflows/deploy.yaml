@@ -94,7 +94,7 @@ jobs:
           ATTEMPT=0
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             echo "Health check attempt $((ATTEMPT+1))/$MAX_ATTEMPTS..."
-            RESPONSE=$(curl -w "\n%{http_code}" -s "$SERVICE_URL/api" 2>&1)
+            RESPONSE=$(curl -w "\n%{http_code}" -s "$SERVICE_URL/health" 2>&1)
             HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
             BODY=$(echo "$RESPONSE" | head -n-1)
             echo "HTTP Status: $HTTP_CODE"
