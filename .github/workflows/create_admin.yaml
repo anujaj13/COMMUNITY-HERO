@@ -50,7 +50,7 @@ jobs:
               --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
-              --timeout 300 \
+              --task-timeout 300 \
               --max-retries 0
           else
             echo "✓ Creating new job..."
@@ -62,7 +62,7 @@ jobs:
               --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
-              --timeout 300 \
+              --task-timeout 300 \
               --max-retries 0
           fi
 
