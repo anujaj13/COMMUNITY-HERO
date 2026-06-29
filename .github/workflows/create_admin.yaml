@@ -46,7 +46,7 @@ jobs:
               --image ${{ env.IMAGE_NAME }}:latest \
               --region ${{ env.REGION }} \
               --command python \
-              --args "scripts/setup_admin.py,${{ github.event.inputs.user_identifier }}" \
+              --args "setup_admin.py,${{ github.event.inputs.user_identifier }}" \
               --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
@@ -58,7 +58,7 @@ jobs:
               --image ${{ env.IMAGE_NAME }}:latest \
               --region ${{ env.REGION }} \
               --command python \
-              --args "scripts/setup_admin.py,${{ github.event.inputs.user_identifier }}" \
+              --args "setup_admin.py,${{ github.event.inputs.user_identifier }}" \
               --set-env-vars "DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO" \
               --memory 512Mi \
               --cpu 1 \
@@ -138,7 +138,7 @@ jobs:
           echo "| Region | ${{ env.REGION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Job Name | ${{ env.JOB_NAME }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Execution | ${{ steps.execute-job.outputs.execution_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Script | scripts/setup_admin.py |" >> $GITHUB_STEP_SUMMARY
+          echo "| Script | setup_admin.py |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔗 Useful Links" >> $GITHUB_STEP_SUMMARY
           echo "- [Frontend](https://community-hero-frontend-y4wprv4gea-el.a.run.app/)" >> $GITHUB_STEP_SUMMARY
