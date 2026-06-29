@@ -86,7 +86,7 @@ jobs:
           echo "Backend deployed to: $SERVICE_URL"
           echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_OUTPUT
 
-        - name: Wait for Backend to be Healthy
+      - name: Wait for Backend to be Healthy
         run: |
           echo "Waiting for backend to be healthy..."
           SERVICE_URL=${{ steps.get-url.outputs.SERVICE_URL }}
