@@ -73,7 +73,7 @@ jobs:
             --timeout 300 \
             --max-instances 10 \
             --min-instances 1 \
-            --startup-cpu-boost \
+            --cpu-boost \
             --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO"
 
       - name: Get Backend service URL
