@@ -60,3 +60,6 @@ yarn-error.log
 .cache/
 dist/
 build/
+
+#temp
+one_time_setup.yaml
