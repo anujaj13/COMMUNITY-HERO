@@ -1,4 +1,4 @@
-﻿name: Deploy Community-Hero to Google Cloud Run
+name: Deploy Community-Hero to Google Cloud Run
 
 on:
   # push:
@@ -74,7 +74,8 @@ jobs:
             --max-instances 10 \
             --min-instances 1 \
             --cpu-boost \
-            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO"
+            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO,ADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }}"
+
 
       - name: Get Backend service URL
         id: get-url

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.utils.database import get_db
-from app.schemas.user import UserCreate, UserResponse, UserProfile, UserRoleAssignment, UserRole
+from app.schemas.user import UserCreate, UserResponse, UserProfile, UserRoleAssignment, UserRole, AdminPromotionRequest
 from app.models.user import User, UserRole as UserRoleEnum
 from app.utils.helpers import hash_password, verify_password
 from app.utils.logging_config import logger
@@ -123,3 +123,44 @@ def assign_role(user_id: int, admin_id: int, role_assignment: UserRoleAssignment
     
     logger.info(f"Role assignment successful: user_id={user_id} changed from {old_role} to {role_assignment.role} by admin_id={admin_id}")
     return target_user
+
+@router.post("/promote-admin", response_model=UserResponse)
+def promote_admin(req: AdminPromotionRequest, db: Session = Depends(get_db)):
+    """
+    Promote a user to ADMIN role using a secret key defined in the environment.
+    """
+    logger.info(f"Admin promotion attempt for user_identifier={req.user_identifier}")
+    
+    # Retrieve the admin secret key from environment
+    configured_key = os.getenv("ADMIN_SECRET_KEY")
+    if not configured_key:
+        logger.error("Admin promotion failed: ADMIN_SECRET_KEY environment variable is not configured")
+        raise HTTPException(
+            status_code=500, 
+            detail="Admin promotion is not configured on the server (missing secret key)"
+        )
+    
+    # Check if the secret key matches
+    if req.secret_key != configured_key:
+        logger.warning(f"Admin promotion failed: Invalid secret key provided for user_identifier={req.user_identifier}")
+        raise HTTPException(status_code=403, detail="Invalid admin secret key")
+    
+    # Get user by ID or username
+    user = None
+    if req.user_identifier.isdigit():
+        user = db.query(User).filter(User.id == int(req.user_identifier)).first()
+    else:
+        user = db.query(User).filter(User.username == req.user_identifier).first()
+        
+    if not user:
+        logger.warning(f"Admin promotion failed: User '{req.user_identifier}' not found")
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    old_role = user.role
+    user.role = UserRoleEnum.ADMIN
+    db.commit()
+    db.refresh(user)
+    
+    logger.info(f"Admin promotion successful: user_identifier={req.user_identifier} (ID: {user.id}) changed from {old_role} to {user.role}")
+    return user
+

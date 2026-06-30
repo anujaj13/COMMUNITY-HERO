@@ -54,3 +54,9 @@ class UserProfile(BaseModel):
 class UserRoleAssignment(BaseModel):
     """Schema for admin role assignment"""
     role: UserRole
+
+class AdminPromotionRequest(BaseModel):
+    """Schema for admin promotion request using a secret key"""
+    user_identifier: str
+    secret_key: str
+
