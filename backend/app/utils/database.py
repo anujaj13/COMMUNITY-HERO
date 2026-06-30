@@ -27,13 +27,14 @@ logger.info(f"Connecting to database at: ...@{_log_url}")
 # pool_pre_ping=True: verifies connections before use — important for Cloud Run
 # which can have idle connections dropped by the Cloud SQL proxy.
 # connect_args check_same_thread is SQLite-only and must NOT be set for PostgreSQL.
+# timeout=30 prevents immediate "database is locked" exceptions under concurrent access.
 _is_sqlite = SQLALCHEMY_DATABASE_URL.startswith("sqlite")
 
 try:
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL,
         pool_pre_ping=True,
-        **({"connect_args": {"check_same_thread": False}} if _is_sqlite else {}),
+        **({"connect_args": {"check_same_thread": False, "timeout": 30}} if _is_sqlite else {}),
     )
     logger.info("SQLAlchemy engine created successfully.")
 except Exception as e:
