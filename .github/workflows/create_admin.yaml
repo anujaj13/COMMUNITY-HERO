@@ -53,7 +53,6 @@ jobs:
               --args "$ARGS" \
               --set-secrets "DATABASE_URL=DATABASE_URL:latest" \
               --set-env-vars "LOG_LEVEL=INFO" \
-              --add-cloudsql-instances "${{ env.PROJECT_ID }}:${{ env.REGION }}:community-hero-db" \
               --memory 512Mi \
               --cpu 1 \
               --task-timeout 300 \
@@ -67,7 +66,6 @@ jobs:
               --args "$ARGS" \
               --set-secrets "DATABASE_URL=DATABASE_URL:latest" \
               --set-env-vars "LOG_LEVEL=INFO" \
-              --add-cloudsql-instances "${{ env.PROJECT_ID }}:${{ env.REGION }}:community-hero-db" \
               --memory 512Mi \
               --cpu 1 \
               --task-timeout 300 \

@@ -1,9 +1,12 @@
-name: Deploy Community-Hero to Google Cloud Run
+﻿name: Deploy Community-Hero to Google Cloud Run
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 env:
@@ -47,12 +50,6 @@ jobs:
             --location=${{ env.REGION }} \
             --quiet || true
 
-      - name: Create SQLite storage bucket if needed
-        run: |
-          gcloud storage buckets create gs://${{ env.PROJECT_ID }}-sqlite-bucket \
-            --location=${{ env.REGION }} \
-            --uniform-bucket-level-access || true
-
       - name: Build Docker image
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} -f Dockerfile.api .
@@ -77,10 +74,7 @@ jobs:
             --max-instances 10 \
             --min-instances 1 \
             --cpu-boost \
-            --execution-environment gen2 \
-            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},LOG_LEVEL=INFO,DATABASE_URL=sqlite:////data/community_hero.db" \
-            --add-volume=name=sqlite-volume,type=cloud-storage,bucket=${{ env.PROJECT_ID }}-sqlite-bucket \
-            --add-volume-mount=volume=sqlite-volume,mount-path=/data
+            --set-env-vars "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }},DATABASE_URL=sqlite:///./community_hero.db,LOG_LEVEL=INFO"
 
       - name: Get Backend service URL
         id: get-url

@@ -5,9 +5,7 @@ import os
 
 print(f"🔍 Starting admin promotion script...")
 print(f"📍 Current working directory: {os.getcwd()}")
-_db_url = os.getenv('DATABASE_URL', 'Not set')
-_masked = _db_url.split("@")[-1] if "@" in _db_url else _db_url
-print(f"📍 DATABASE_URL: ...@{_masked}")
+print(f"📍 DATABASE_URL: {os.getenv('DATABASE_URL', 'Not set')}")
 
 # Initialize database
 try:
