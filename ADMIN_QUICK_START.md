@@ -18,7 +18,7 @@ curl -X POST "http://localhost:8000/api/users/register" \
   }'
 
 # 2. Promote to AUTHORITY (as admin_id=1)
-curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1" \
+curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka" \
   -H "Content-Type: application/json" \
   -d '{"role": "authority"}'
 ```
@@ -114,15 +114,15 @@ POST /api/users/login
 
 ```bash
 # Assign AUTHORITY
-PUT /api/users/2/role?admin_id=1
+PUT /api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka
 {"role": "authority"}
 
 # Assign ADMIN
-PUT /api/users/3/role?admin_id=1
+PUT /api/users/3/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka
 {"role": "admin"}
 
 # Revert to CITIZEN
-PUT /api/users/2/role?admin_id=1
+PUT /api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka
 {"role": "citizen"}
 ```
 

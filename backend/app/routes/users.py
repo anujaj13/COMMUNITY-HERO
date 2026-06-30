@@ -78,22 +78,37 @@ def get_leaderboard(db: Session = Depends(get_db)):
     return [{"username": u.username, "reputation_score": u.reputation_score, "badges": u.badges_earned} for u in users]
 
 @router.put("/{user_id}/role", response_model=UserResponse)
-def assign_role(user_id: int, admin_id: int, role_assignment: UserRoleAssignment, db: Session = Depends(get_db)):
+def assign_role(user_id: int, admin_id: int, admin_secret: str, role_assignment: UserRoleAssignment, db: Session = Depends(get_db)):
     """
     Assign or change a user's role. Only ADMIN users can call this endpoint.
     
     Parameters:
     - user_id: The ID of the user whose role to change
-    - admin_id: The ID of the admin making this change (header or query param)
+    - admin_id: The ID of the admin making this change (query param)
+    - admin_secret: The admin secret key to verify the action (query param)
     - role_assignment: The new role to assign
     
     Example:
-    PUT /api/users/2/role?admin_id=1
+    PUT /api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka
     {
         "role": "authority"
     }
     """
     logger.info(f"Role assignment attempt: admin_id={admin_id} changing user_id={user_id} to {role_assignment.role}")
+    
+    # Retrieve the admin secret key from environment to verify the usage
+    configured_key = os.getenv("ADMIN_SECRET_KEY")
+    if not configured_key:
+        logger.error("Role assignment failed: ADMIN_SECRET_KEY environment variable is not configured")
+        raise HTTPException(
+            status_code=500, 
+            detail="Role assignment verification is not configured on the server (missing secret key)"
+        )
+    
+    # Check if the secret key matches
+    if admin_secret != configured_key:
+        logger.warning(f"Role assignment failed: Invalid admin secret key provided by admin_id={admin_id}")
+        raise HTTPException(status_code=403, detail="Invalid admin secret key")
     
     # Verify admin exists and has ADMIN role
     admin = db.query(User).filter(User.id == admin_id).first()

@@ -159,7 +159,7 @@ Response will show `id: 2`.
 
 #### Step 2: Assign AUTHORITY role (as admin)
 ```bash
-curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1" \
+curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka" \
   -H "Content-Type: application/json" \
   -d '{
     "role": "authority"
@@ -201,7 +201,7 @@ curl -X POST "http://localhost:8000/api/users/register" \
   }'
 
 # Promote to admin (as admin 1)
-curl -X PUT "http://localhost:8000/api/users/3/role?admin_id=1" \
+curl -X PUT "http://localhost:8000/api/users/3/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka" \
   -H "Content-Type: application/json" \
   -d '{
     "role": "admin"
@@ -213,13 +213,14 @@ curl -X PUT "http://localhost:8000/api/users/3/role?admin_id=1" \
 ### Endpoint Details
 
 ```
-PUT /api/users/{user_id}/role?admin_id={admin_id}
+PUT /api/users/{user_id}/role?admin_id={admin_id}&admin_secret={admin_secret}
 ```
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `user_id` | integer | Yes | The ID of the user whose role to change (URL path) |
 | `admin_id` | integer | Yes | The ID of the admin making the change (query parameter) |
+| `admin_secret` | string | Yes | The admin secret key matching `ADMIN_SECRET_KEY` (query parameter) |
 | `role` | string | Yes | The new role: `"citizen"`, `"authority"`, or `"admin"` (JSON body) |
 
 ### Request Body

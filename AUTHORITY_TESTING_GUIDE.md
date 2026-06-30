@@ -78,7 +78,7 @@ sqlite3 backend/community_hero.db "UPDATE users SET role = 'admin' WHERE id = 1;
 1. Open terminal (or API testing tool)
 2. Run this command (replace with your IDs):
    ```bash
-   curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1" \
+   curl -X PUT "http://localhost:8000/api/users/2/role?admin_id=1&admin_secret=adfyatdshadtejkdksauhje6765hjahdka" \
      -H "Content-Type: application/json" \
      -d '{"role": "authority"}'
    ```
